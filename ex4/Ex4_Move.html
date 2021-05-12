@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>OOAD Training Course - Ex4 Move in OOAD</title>
+  <link rel="stylesheet" href="../css/jquery-ui.css">
+  <link rel="stylesheet" href="../css/chessboard-1.0.0.min.css">
+</head>
+
+<body>
+  <!--- Begin Example HTML ------------------------------------------------------>
+  <div id="myBoard" style="width: 400px"></div>
+  <button id="KingsideCastlingBtn" hidden="hidden">Kingside Castling</button>
+  <button id="QueensideCastlingBtn" hidden="hidden">Queenside Castling</button>
+
+  <button id="EnPassantBtn" hidden="hidden">En Passant</button>
+
+  <div id="PromotionOption" style="width: 400px" hidden="hidden">
+    <input type="radio" name="chk_info" value="q" checked> Queen
+    <input type="radio" name="chk_info" value="b"> Bishop
+    <input type="radio" name="chk_info" value="r"> Rook
+    <input type="radio" name="chk_info" value="n"> Knight
+  </div>
+
+  <div id="Status" style="width: 400px">
+    <p id="Log">
+    </p>
+  </div>
+
+  <!--- End Example HTML -------------------------------------------------------->
+
+  <script src="../js/jquery-3.4.1.min.js"></script>
+  <script src="../js/chessboard-1.0.0.js"></script>
+  <script src="../js/chess.js"></script>
+  <script src="../js/ChessEngine.js"></script>
+  <script>
+    // --- Begin Example --------------------------------------------------------
+
+    // --- Event Handlers; Hooks --------------------------------------------------------
+    var game = null;
+
+    function doKingsideCastling() {
+    }
+
+    function doQueensideCastling() {
+    }
+
+    function doEnPassant() {
+    }
+
+    function onMouseoverSquare(square, piece) {
+      return game.onMouseoverSquare(square, piece);
+    }
+
+    function onDragStart(source, piece) {
+      return game.onDragStart(source, piece);
+    }
+
+    function onDrop(source, target) {
+      return game.onDrop(source, target);
+    }
+
+    // --- Classes --------------------------------------------------------
+    class Piece {
+      constructor(type, color, square, game) {
+        this.type = type;
+        this.color = color;
+        this.square = square;
+        this.game = game;
+      }
+
+      highlight() {
+        var moves = this.game.getPossibleMoves(this.square);
+        for (var i = 0; i < moves.length; i++) {
+          this.game.highlight(moves[i].to);
+        }
+      }
+
+      getPosition() {
+        return this.square;
+      }
+
+      setPosition(square) {
+        this.square = square;
+      }
+
+      getColor() {
+        return this.color;
+      }
+
+      movable(square) {
+        var moves = this.game.getPossibleMoves(square);
+        if (moves === null) return false;
+        if (moves.length == 0) return false;
+
+        return true;
+      }
+
+      move(source, target) {
+        var flag = this.game.getFlag(source, target);
+
+        if (flag === null) return 'snapback';
+
+        if (flag.includes('c')) {
+          this.game.capture(target);
+          this.game.movePiece(source, target);
+        }
+        else {
+          this.game.movePiece(source, target);
+        }
+
+        this.game.log();
+      }
+    }
+
+    // --- Classes --------------------------------------------------------
+    class ChessGame {
+      constructor(config) {
+        this.engine = new ChessEngine(config);
+        this.initPieces();
+      }
+
+      initPieces() {
+        this.pieces = [];
+
+        for (var c = 'a'; c <= 'h'; c = String.fromCharCode(c.charCodeAt() + 1)) {
+          for (var r = '1'; r <= '8'; r++) {
+            var square = c + r;
+            var piece = this.engine.getPiece(square);
+            if (piece !== null) {
+              this.pieces.push(new Piece(piece.type, piece.color, square, this));
+            }
+          }
+        }
+      }
+
+      loadFenString(fen) {
+        this.engine.loadFenString(fen);
+        this.initPieces();
+      }
+
+      onMouseoverSquare(square, piece) {
+        this.engine.removeGreySquares();
+        if (!piece) return;
+
+        var p = this.getPiece(square);
+        if (p === null) return;
+
+        p.highlight();
+      }
+
+      onDragStart(source, piece) {
+        this.engine.clearBoard();
+
+        if (this.engine.gameOver()) return false;
+        var p = this.getPiece(source);
+
+        if (p === null) return false;
+
+        return p.movable(source);
+      }
+
+      onDrop(source, target) {
+        var p = this.getPiece(source);
+        if (p === null) return 'snapback';
+
+        return p.move(source, target);
+      }
+
+      getPiece(square) {
+        for (var i = 0; i < this.pieces.length; i++) {
+          var piece = this.pieces[i]
+          if (piece.getPosition() === square)
+            return piece;
+        }
+        return null;
+      }
+
+      getPossibleMoves(square) {
+        return this.engine.getPossibleMoves(square);
+      }
+
+      getEveryPossibleMoves() {
+        return this.engine.getEveryPossibleMoves();
+      }
+
+      getFlag(source, target) {
+        var moves = this.engine.getPossibleMoves(source);
+        for (var i = 0; i < moves.length; i++) {
+          if (moves[i].to === target) return moves[i].flags;
+        }
+
+        return null;
+      }
+
+      capture(square) {
+        var p = this.getPiece(square);
+
+        if (p === null) return;
+
+        var index = this.pieces.indexOf(p);
+        this.pieces.splice(index, 1);
+      }
+
+      movePiece(source, target) {
+        this.engine.move(source, target);
+
+        var p = this.getPiece(source);
+        p.setPosition(target);
+        this.engine.sync();
+      }
+
+      highlight(square) {
+        this.engine.highlight(square);
+      }
+
+      log() {
+        this.engine.log();
+      }
+    }
+    // --- Event Handlers; Hooks --------------------------------------------------------
+
+    // Configuration
+    var config = {
+      draggable: true,
+      onMouseoverSquare: onMouseoverSquare,
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      doKingsideCastling: doKingsideCastling,
+      doQueensideCastling: doQueensideCastling,
+      doEnPassant: doEnPassant,
+      board: 'myBoard',
+      kingcastling: 'KingsideCastlingBtn',
+      queencastling: 'QueensideCastlingBtn',
+      enpassant: 'EnPassantBtn',
+      promotionoptions: 'PromotionOption',
+      option: 'chk_info'
+    }
+
+    game = new ChessGame(config);
+
+  // --- End Example JS ----------------------------------------------------------
+  </script>
+</body>
+
+</html>

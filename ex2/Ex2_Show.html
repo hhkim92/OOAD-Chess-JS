@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>OOAD Training Course - Ex2 Show in OOAD</title>
+  <link rel="stylesheet" href="../css/jquery-ui.css">
+  <link rel="stylesheet" href="../css/chessboard-1.0.0.min.css">
+</head>
+
+<body>
+  <!--- Begin Example HTML ------------------------------------------------------>
+  <div id="myBoard" style="width: 400px"></div>
+  <button id="KingsideCastlingBtn" hidden="hidden">Kingside Castling</button>
+  <button id="QueensideCastlingBtn" hidden="hidden">Queenside Castling</button>
+
+  <button id="EnPassantBtn" hidden="hidden">En Passant</button>
+
+  <div id="PromotionOption" style="width: 400px" hidden="hidden">
+    <input type="radio" name="chk_info" value="q" checked> Queen
+    <input type="radio" name="chk_info" value="b"> Bishop
+    <input type="radio" name="chk_info" value="r"> Rook
+    <input type="radio" name="chk_info" value="n"> Knight
+  </div>
+
+  <div id="Status" style="width: 400px">
+    <p id="Log">
+    </p>
+  </div>
+
+  <!--- End Example HTML -------------------------------------------------------->
+
+  <script src="../js/jquery-3.4.1.min.js"></script>
+  <script src="../js/chessboard-1.0.0.js"></script>
+  <script src="../js/chess.js"></script>
+  <script src="../js/ChessEngine.js"></script>
+  <script>
+    // --- Begin Example --------------------------------------------------------
+
+    // --- Event Handlers; Hooks --------------------------------------------------------
+    function doKingsideCastling() {
+    }
+
+    function doQueensideCastling() {
+    }
+
+    function doEnPassant() {
+    }
+
+    function onMouseoverSquare(square, piece) {
+    }
+
+    function onDragStart(source, piece) {
+    }
+
+    function onDrop(source, target) {
+    }
+
+    // --- Classes --------------------------------------------------------
+    class Rook {
+      constructor(color, square, engine) {
+        this.color = color;
+        this.square = square;
+        this.engine = engine;
+
+        this.engine.put({ type: 'r', color: color }, square);
+        this.engine.log();
+      }
+
+      highlight() {
+        var moves = this.engine.getPossibleMoves(this.square);
+        for (var i = 0; i < moves.length; i++) {
+          this.engine.highlight(moves[i].to);
+        }
+      }
+    }
+
+    // --- Classes --------------------------------------------------------
+    class ChessGame {
+      constructor(config) {
+        this.engine = new ChessEngine(config);
+        this.engine.clear();
+
+        this.rook = new Rook('w', 'h1', this.engine);
+      }
+
+      highlight() {
+        this.rook.highlight();
+      }
+    }
+    // --- Event Handlers; Hooks --------------------------------------------------------
+
+    // Configuration
+    var config = {
+      draggable: false,
+      onMouseoverSquare: onMouseoverSquare,
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      doKingsideCastling: doKingsideCastling,
+      doQueensideCastling: doQueensideCastling,
+      doEnPassant: doEnPassant,
+      board: 'myBoard',
+      kingcastling: 'KingsideCastlingBtn',
+      queencastling: 'QueensideCastlingBtn',
+      enpassant: 'EnPassantBtn',
+      promotionoptions: 'PromotionOption',
+      option: 'chk_info'
+    }
+
+    var game = new ChessGame(config);
+    game.highlight();
+    // --- End Example JS ----------------------------------------------------------
+  </script>
+</body>
+
+</html>
